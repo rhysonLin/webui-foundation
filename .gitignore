@@ -1,0 +1,44 @@
+# 依赖包目录（npm/yarn/pnpm 安装的包）
+node_modules/
+.pnpm-store/
+
+# 打包构建产物
+dist/
+build/
+output/
+dist-ssr/
+*.local
+
+# 编辑器配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 环境变量（敏感信息）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 测试/覆盖率
+coverage/
+*.lcov
+.nyc_output/
+
+# 临时文件
+*.log
+temp/
+tmp/
