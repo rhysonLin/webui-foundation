@@ -19,6 +19,7 @@ function getBridgeInfo() {
   };
 }
 
+
 export default function App() {
   const engine: Engine = useMemo(() => createEngine(), []);
 
@@ -27,7 +28,24 @@ export default function App() {
   const [sceneState, setSceneState] = useState<unknown>(null);
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [bridgeInfo, setBridgeInfo] = useState(getBridgeInfo());
+  const [worldForm, setWorldForm] = useState({
+    x: "0",
+    y: "0",
+    z: "300",
+    pitch: "-20",
+    yaw: "0",
+    roll: "0",
+  });
 
+  const [geoForm, setGeoForm] = useState({
+    longitude: "116.397",
+    latitude: "39.908",
+    height: "500",
+    pitch: "-20",
+    yaw: "0",
+    roll: "0",
+  });
+  
   const pushLog = (text: string) => {
     setLogs((prev) => [{ id: Date.now() + Math.random(), text }, ...prev].slice(0, 80));
   };
@@ -52,6 +70,14 @@ export default function App() {
       pushLog(`[engine] Pong -> ${JSON.stringify(data)}`);
     });
 
+    const offMoveWorldResult = engine.on("Camera.MoveToWorld.Result", (data) => {
+      pushLog(`[engine] Camera.MoveToWorld.Result -> ${JSON.stringify(data)}`);
+    });
+
+    const offMoveGeoResult = engine.on("Camera.MoveToGeo.Result", (data) => {
+      pushLog(`[engine] Camera.MoveToGeo.Result -> ${JSON.stringify(data)}`);
+    });
+
     const offSceneState = engine.on("SceneState", (data) => {
       setSceneState(data);
       setUeReady(true);
@@ -70,6 +96,8 @@ export default function App() {
       offAny();
       offReady();
       offPong();
+      offMoveWorldResult();
+      offMoveGeoResult();
       offSceneState();
       engine.dispose();
     };
@@ -84,6 +112,39 @@ export default function App() {
   const rawSend = (type: string, data?: unknown) => {
     pushLog(`[RawSend] ${type} -> ${JSON.stringify(data)}`);
     (window as any).ueBridge?.sendEvent?.(type, data);
+  };
+
+  const toNumber = (value: string, fallback = 0) => {
+    const result = Number(value);
+    return Number.isFinite(result) ? result : fallback;
+  };
+
+  const flyToWorldLocation = () => {
+    const payload = {
+      x: toNumber(worldForm.x),
+      y: toNumber(worldForm.y),
+      z: toNumber(worldForm.z),
+      pitch: toNumber(worldForm.pitch),
+      yaw: toNumber(worldForm.yaw),
+      roll: toNumber(worldForm.roll),
+    };
+
+    pushLog(`[Action] Camera.MoveToWorld -> ${JSON.stringify(payload)}`);
+    engine.send("Camera.MoveToWorld", payload);
+  };
+
+  const flyToGeoLocation = () => {
+    const payload = {
+      longitude: toNumber(geoForm.longitude),
+      latitude: toNumber(geoForm.latitude),
+      height: toNumber(geoForm.height),
+      pitch: toNumber(geoForm.pitch),
+      yaw: toNumber(geoForm.yaw),
+      roll: toNumber(geoForm.roll),
+    };
+
+    pushLog(`[Action] Camera.MoveToGeo -> ${JSON.stringify(payload)}`);
+    engine.send("Camera.MoveToGeo", payload);
   };
 
   return (
@@ -152,6 +213,144 @@ export default function App() {
 
             <button onClick={refreshBridgeInfo}>Refresh Bridge State</button>
           </div>
+        </div>
+        
+
+        <div className="card">
+          <div className="section-title">Camera Move - UE World Location</div>
+
+          <div className="form-help">
+            输入 UE 世界坐标 FVector：X / Y / Z。旋转角 FRotator：Pitch / Yaw / Roll，单位为度。
+          </div>
+
+          <div className="input-grid">
+            <label>
+              X
+              <input
+                value={worldForm.x}
+                onChange={(e) => setWorldForm((prev) => ({ ...prev, x: e.target.value }))}
+                placeholder="UE X，例如 1000"
+              />
+            </label>
+
+            <label>
+              Y
+              <input
+                value={worldForm.y}
+                onChange={(e) => setWorldForm((prev) => ({ ...prev, y: e.target.value }))}
+                placeholder="UE Y，例如 2000"
+              />
+            </label>
+
+            <label>
+              Z
+              <input
+                value={worldForm.z}
+                onChange={(e) => setWorldForm((prev) => ({ ...prev, z: e.target.value }))}
+                placeholder="UE Z，例如 300"
+              />
+            </label>
+
+            <label>
+              Pitch
+              <input
+                value={worldForm.pitch}
+                onChange={(e) => setWorldForm((prev) => ({ ...prev, pitch: e.target.value }))}
+                placeholder="例如 -20"
+              />
+            </label>
+
+            <label>
+              Yaw
+              <input
+                value={worldForm.yaw}
+                onChange={(e) => setWorldForm((prev) => ({ ...prev, yaw: e.target.value }))}
+                placeholder="例如 90"
+              />
+            </label>
+
+            <label>
+              Roll
+              <input
+                value={worldForm.roll}
+                onChange={(e) => setWorldForm((prev) => ({ ...prev, roll: e.target.value }))}
+                placeholder="通常填 0"
+              />
+            </label>
+          </div>
+
+          <button onClick={flyToWorldLocation}>
+            Fly To UE World Location
+          </button>
+        </div>
+
+        <div className="card">
+          <div className="section-title">Camera Move - Longitude / Latitude / Height</div>
+
+          <div className="form-help">
+            输入 Cesium 经纬度坐标：Longitude / Latitude 单位为度，Height 单位为米。
+            旋转角 FRotator：Pitch / Yaw / Roll，单位为度。
+          </div>
+
+          <div className="input-grid">
+            <label>
+              Longitude
+              <input
+                value={geoForm.longitude}
+                onChange={(e) => setGeoForm((prev) => ({ ...prev, longitude: e.target.value }))}
+                placeholder="经度，例如 116.397"
+              />
+            </label>
+
+            <label>
+              Latitude
+              <input
+                value={geoForm.latitude}
+                onChange={(e) => setGeoForm((prev) => ({ ...prev, latitude: e.target.value }))}
+                placeholder="纬度，例如 39.908"
+              />
+            </label>
+
+            <label>
+              Height
+              <input
+                value={geoForm.height}
+                onChange={(e) => setGeoForm((prev) => ({ ...prev, height: e.target.value }))}
+                placeholder="高度，单位米，例如 500"
+              />
+            </label>
+
+            <label>
+              Pitch
+              <input
+                value={geoForm.pitch}
+                onChange={(e) => setGeoForm((prev) => ({ ...prev, pitch: e.target.value }))}
+                placeholder="例如 -20"
+              />
+            </label>
+
+            <label>
+              Yaw
+              <input
+                value={geoForm.yaw}
+                onChange={(e) => setGeoForm((prev) => ({ ...prev, yaw: e.target.value }))}
+                placeholder="例如 0"
+              />
+            </label>
+
+            <label>
+              Roll
+              <input
+                value={geoForm.roll}
+                onChange={(e) => setGeoForm((prev) => ({ ...prev, roll: e.target.value }))}
+                placeholder="通常填 0"
+              />
+            </label>
+          </div>
+
+          <button onClick={flyToGeoLocation}>
+            Fly To Geo Location
+          </button>
         </div>
 
         <div className="card">
