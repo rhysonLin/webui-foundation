@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createEngine, type Engine } from "enginejs";
-
+import "./App.css";
 type LogItem = {
   id: number;
   text: string;
@@ -224,14 +224,14 @@ export default function App() {
           </div>
 
           <div className="input-grid">
-            <label>
+            <div>
               X
               <input
                 value={worldForm.x}
                 onChange={(e) => setWorldForm((prev) => ({ ...prev, x: e.target.value }))}
                 placeholder="UE X，例如 1000"
               />
-            </label>
+            </div>
 
             <label>
               Y
@@ -293,14 +293,14 @@ export default function App() {
           </div>
 
           <div className="input-grid">
-            <label>
+            <div>
               Longitude
-              <input
+              <input className="JWXIPT"
                 value={geoForm.longitude}
                 onChange={(e) => setGeoForm((prev) => ({ ...prev, longitude: e.target.value }))}
                 placeholder="经度，例如 116.397"
               />
-            </label>
+            </div>
 
             <label>
               Latitude
